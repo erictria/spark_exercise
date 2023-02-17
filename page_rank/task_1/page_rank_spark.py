@@ -27,7 +27,11 @@ if __name__ == "__main__":
     # Total Arguments
     n = len(sys.argv)
     print(sys.argv)
-
+    
+    # Check if user inputted the right number of arguments. Should be 3.
+    # 0: name of executable file
+    # 1: input path
+    # 2: output path
     if n != 3:
         print("Invalid number of inputs:", n)
         exit(-1)
@@ -41,11 +45,14 @@ if __name__ == "__main__":
         .master('spark://172.31.82.177:7077')\
         .getOrCreate()
     
+    # Read the input file to a dataframe
+    # Convert dataframe to RDD in order to apply map functions
+    print('Reading from {}...'.format(input_file_path))
     lines = spark.read.text(
         input_file_path,
         format = 'txt',
         header = 'true'
-    )
+    ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
     links = lines.map(lambda urls: parse_neighbors(urls)).distinct().groupByKey()
@@ -62,11 +69,21 @@ if __name__ == "__main__":
 
         # Update each page’s rank to be 0.15 + 0.85 * (sum of contributions)
         ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15)
-
-    ranks.write.txt(
+    
+    # Convert RDD to dataframe
+    df_column_names = ['link', 'rank']
+    ranks_df = ranks.toDF(df_column_names)
+    
+    # Write the resulting dataframe to the output file path provided
+    # Set mode to overwrite in the case that the file already exists
+    print('Writing to {}...'.format(output_file_path))
+    sorted_df.write.csv(
         output_file_path,
         header = 'true',
         mode = 'overwrite'
     )
     
+    # Stop Spark session
     spark.stop()
+    
+    print('Done!')
