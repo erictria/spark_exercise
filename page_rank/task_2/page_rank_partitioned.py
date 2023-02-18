@@ -82,8 +82,8 @@ if __name__ == "__main__":
     
     # Convert RDD to dataframe
     df_column_names = ['link', 'rank']
-    ranks_df = ranks.toDF(df_column_names).sort(col('rank').desc)
-    ranks_df.show(10)
+    ranks_df = ranks.toDF(df_column_names)#.sort(col('rank').desc)
+#     ranks_df.show(10)
     
     # Write the resulting dataframe to the output file path provided
     # Set mode to overwrite in the case that the file already exists

@@ -57,9 +57,7 @@ if __name__ == "__main__":
     # Convert dataframe to RDD in order to apply map functions
     print('Reading from {}...'.format(input_file_path))
     lines = spark.read.text(
-        input_file_path,
-        format = 'txt',
-        header = 'true'
+        input_file_path
     ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
@@ -80,8 +78,8 @@ if __name__ == "__main__":
     
     # Convert RDD to dataframe
     df_column_names = ['link', 'rank']
-    ranks_df = ranks.toDF(df_column_names).sort(col('rank').desc)
-    ranks_df.show(10)
+    ranks_df = ranks.toDF(df_column_names)#.sort(col('rank').desc)
+#     ranks_df.show(10)
     
     # Write the resulting dataframe to the output file path provided
     # Set mode to overwrite in the case that the file already exists
