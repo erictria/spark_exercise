@@ -1,7 +1,3 @@
-# https://github.com/apache/spark/blob/master/examples/src/main/python/pagerank.py
-# https://github.com/ashishvshenoy/pagerank-spark
-# https://medium.com/swlh/pagerank-on-mapreduce-55bcb76d1c99
-
 import re
 import sys
 import time
@@ -38,18 +34,20 @@ if __name__ == "__main__":
     # 0: name of executable file
     # 1: input path
     # 2: output path
-    if n != 3:
+    # 3: partitions
+    if n != 4:
         print("Invalid number of inputs:", n)
         exit(-1)
     
     input_file_path = sys.argv[1]
     output_file_path = sys.argv[2]
+    partitions = int(sys.argv[3])
 
     start_time = time.time()
     
     findspark.init('/home/ubuntu/spark-3.3.1-bin-hadoop3')
     spark = SparkSession.builder\
-        .appName('Spark Page Rank')\
+        .appName('Spark Page Rank Partitioned')\
         .master('spark://172.31.82.177:7077')\
         .getOrCreate()
     
@@ -63,10 +61,14 @@ if __name__ == "__main__":
     ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
-    links = lines.map(lambda urls: parse_neighbors(urls)).distinct().groupByKey()
+    links = lines.map(lambda urls: parse_neighbors(urls))\
+        .distinct()\
+        .groupByKey()\
+        .partitionBy(partitions)
 
     # Set initial rank of each page to be 1
     ranks = links.map(lambda url_neighbors: (url_neighbors[0], 1.0))
+    ranks = ranks.partitionBy(partitions)
 
     # 10 iterations for computing contributions
     # Each page p contributes to its outgoing neighbors a value of rank(p)/(# of outgoing neighbors of p)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
         )
 
         # Update each page’s rank to be 0.15 + 0.85 * (sum of contributions)
-        ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15)
+        ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15).partitionBy(partitions)
     
     # Convert RDD to dataframe
     df_column_names = ['link', 'rank']
@@ -94,6 +96,6 @@ if __name__ == "__main__":
     
     # Stop Spark session
     spark.stop()
-    
+
     end_time = time.time()
     print('Done! Finished in {} seconds'.format(end_time - start_time))

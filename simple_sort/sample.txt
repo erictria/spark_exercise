@@ -1,1 +1,0 @@
-~/spark-3.3.1-bin-hadoop3/bin/spark-submit sort_file.py hdfs://172.31.82.177:9000/export.csv hdfs://172.31.82.177:9000/export_sorted.csv
