@@ -55,9 +55,7 @@ if __name__ == "__main__":
     # Convert dataframe to RDD in order to apply map functions
     print('Reading from {}...'.format(input_file_path))
     lines = spark.read.text(
-        input_file_path,
-        format = 'txt',
-        header = 'true'
+        input_file_path
     ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
