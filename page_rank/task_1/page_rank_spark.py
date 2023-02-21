@@ -1,7 +1,3 @@
-# https://github.com/apache/spark/blob/master/examples/src/main/python/pagerank.py
-# https://github.com/ashishvshenoy/pagerank-spark
-# https://medium.com/swlh/pagerank-on-mapreduce-55bcb76d1c99
-
 import re
 import sys
 import time
@@ -18,11 +14,6 @@ def compute_contributions(urls, rank):
     total_urls = len(urls)
     for url in urls:
         yield (url, rank / total_urls)
-
-
-def convert_to_lines(data):
-    line = '\n'.join(str(d) for d in data)
-    return line
 
 def parse_neighbors(urls):
     parts = re.split(r'\s+', urls)
@@ -61,25 +52,32 @@ if __name__ == "__main__":
     ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
+    # The map applies the parse_neighbors function to all the lines of the initial RDD
+    # The distinct() functon selects distinct rows from all columns
+    # groupByKey() groups the values for each key in the RDD into a single sequence
     links = lines.map(lambda urls: parse_neighbors(urls)).distinct().groupByKey()
 
-    # Set initial rank of each page to be 1
+    # Set initial rank of each page to be 1 using map
     ranks = links.map(lambda url_neighbors: (url_neighbors[0], 1.0))
 
     # 10 iterations for computing contributions
     # Each page p contributes to its outgoing neighbors a value of rank(p)/(# of outgoing neighbors of p)
     for iteration in range(10):
+
+        # The join() combines links and ranks to an RDD
+        # The flatMap() applies the compute_contribution function to the RDD and flattens it into a (url, rank) format
+        # Since the compute_contributions() function returns a list, flatMap() flattens the output to a list instead of a list of lists
         contribs = links.join(ranks).flatMap(
             lambda url_urls_rank: compute_contributions(url_urls_rank[1][0], url_urls_rank[1][1])
         )
 
         # Update each page’s rank to be 0.15 + 0.85 * (sum of contributions)
+        # reduceByKey() merges the values for each key, in this case the 'add' operation is used to merge
         ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15)
     
     # Convert RDD to dataframe
     df_column_names = ['link', 'rank']
-    ranks_df = ranks.toDF(df_column_names)#.sort(col('rank').desc)
-#     ranks_df.show(10)
+    ranks_df = ranks.toDF(df_column_names)
     
     # Write the resulting dataframe to the output file path provided
     # Set mode to overwrite in the case that the file already exists
@@ -94,4 +92,7 @@ if __name__ == "__main__":
     spark.stop()
     
     end_time = time.time()
-    print('Done! Finished in {} seconds'.format(end_time - start_time))
+    run_time_seconds = end_time - start_time
+    run_time_mins = run_time_seconds / 60
+    print('Done! Finished in {} seconds'.format(run_time_seconds))
+    print('Finished in {} minutes'.format(run_time_mins))

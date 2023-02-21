@@ -1,6 +1,7 @@
 import findspark
 from pyspark.sql import SparkSession
 import sys
+import time
 
 
 if __name__ == "__main__":
@@ -18,6 +19,8 @@ if __name__ == "__main__":
 
     input_file_path = sys.argv[1]
     output_file_path = sys.argv[2]
+
+    start_time = time.time()
 
     # Init Spark
     findspark.init('/home/ubuntu/spark-3.3.1-bin-hadoop3')
@@ -54,4 +57,8 @@ if __name__ == "__main__":
     # Stop Spark session
     spark.stop()
 
-    print('Done!')
+    end_time = time.time()
+    run_time_seconds = end_time - start_time
+    run_time_mins = run_time_seconds / 60
+    print('Done! Finished in {} seconds'.format(run_time_seconds))
+    print('Finished in {} minutes'.format(run_time_mins))
