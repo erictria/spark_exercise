@@ -42,16 +42,18 @@ if __name__ == "__main__":
     
     findspark.init('/home/ubuntu/spark-3.3.1-bin-hadoop3')
     spark = SparkSession.builder\
-        .appName('Spark Page Rank Partitioned')\
+        .appName('Spark Page Rank Task3')\
         .master('spark://172.31.82.177:7077')\
         .getOrCreate()
     
     # Read the input file to a dataframe
     # Convert dataframe to RDD in order to apply map functions
+    # Partition as the file is being read in
     print('Reading from {}...'.format(input_file_path))
-    lines = spark.read.text(
-        input_file_path
-    ).rdd.map(lambda r: r[0])
+    lines = spark.sparkContext.textFile(input_file_path, partitions)
+    # lines = spark.read.text(
+    #     input_file_path
+    # ).rdd.map(lambda r: r[0])
 
     # Parse text lines to node connections
     # The map applies the parse_neighbors function to all the lines of the initial RDD
@@ -64,10 +66,8 @@ if __name__ == "__main__":
         .partitionBy(partitions)
 
     # Set initial rank of each page to be 1
-    ranks = links.map(lambda url_neighbors: (url_neighbors[0], 1.0))
-
     # partitionBy() splits the large dataset into the specified number of partitions
-    ranks = ranks.partitionBy(partitions)
+    ranks = links.map(lambda url_neighbors: (url_neighbors[0], 1.0)).partitionBy(partitions)
 
     # 10 iterations for computing contributions
     # Each page p contributes to its outgoing neighbors a value of rank(p)/(# of outgoing neighbors of p)

@@ -6,6 +6,7 @@
 ~/spark-3.3.1-bin-hadoop3/bin/spark-submit page_rank_partitioned.py hdfs://172.31.82.177:9000/web-BerkStan.txt hdfs://172.31.82.177:9000/page_rank_partitioned.csv
 550.8189353942871 seconds
 
+~/spark-3.3.1-bin-hadoop3/bin/spark-submit page_rank_task3.py hdfs://172.31.82.177:9000/web-BerkStan.txt hdfs://172.31.82.177:9000/page_rank_task3.csv
 # https://github.com/apache/spark/blob/master/examples/src/main/python/pagerank.py
 # https://github.com/ashishvshenoy/pagerank-spark
 # https://medium.com/swlh/pagerank-on-mapreduce-55bcb76d1c99
