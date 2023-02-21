@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # Sort dataframe by the 'cca2' and 'timestamp' columns
     print('Sorting dataframe...')
-    sorted_df = input_df.sort('cca2', 'timestamp')
+    sorted_df = input_df.orderBy('cca2', 'timestamp')
 
     # Write the resulting dataframe to the output file path provided
     # Set mode to overwrite in the case that the file already exists
