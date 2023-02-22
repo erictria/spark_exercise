@@ -67,13 +67,16 @@ if __name__ == "__main__":
         # The join() combines links and ranks to an RDD
         # The flatMap() applies the compute_contribution function to the RDD and flattens it into a (url, rank) format
         # Since the compute_contributions() function returns a list, flatMap() flattens the output to a list instead of a list of lists
-        contribs = links.join(ranks).flatMap(
-            lambda url_urls_rank: compute_contributions(url_urls_rank[1][0], url_urls_rank[1][1])
+        contributions = links.join(ranks).flatMap(
+            lambda urls_rank: compute_contributions(
+                urls_rank[1][0], 
+                urls_rank[1][1]
+            )
         )
 
         # Update each page’s rank to be 0.15 + 0.85 * (sum of contributions)
         # reduceByKey() merges the values for each key, in this case the 'add' operation is used to merge
-        ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15)
+        ranks = contributions.reduceByKey(add).mapValues(lambda rank: rank * 0.85 + 0.15)
     
     # Convert RDD to dataframe
     df_column_names = ['link', 'rank']
